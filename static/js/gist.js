@@ -34,7 +34,7 @@ var Comments = (function() {
          _comments = comments;
       },
       display_all : function() {
-         _comments.forEach(function(comment) {
+	 $.each(_comments, function(i, comment) {
             Comments.display(comment);
          });
          $('div.file-comments').fadeIn(400);
@@ -43,7 +43,7 @@ var Comments = (function() {
 	       $('div.comment-link-bottom:hidden', e).show();
 	    }
 	 });
- 
+
       },
       display : function(comment) {
          var container;
@@ -120,7 +120,7 @@ $(function() {
 	    hide : false,
 	    style : 'ui-tooltip-light ui-tooltip-rounded'
 	 });
-	 
+
 	 self.click(function() {
 	    $('textarea[name="comment"]')
 	      .keyup(_preview_comment_on_event);
@@ -130,9 +130,21 @@ $(function() {
 	    $('.about-file code').text(self.attr('data-file'));
 	    return false;
 	 });
-	 
+
       });
    });
+
+   if ($('input[name="tags"]').size()) {
+      // set up autocomplete
+      $.getJSON('/tags.json',function(r) {
+         L(r.tags);
+         $('input[name="tags"]').autocomplete(r.tags, {
+            autoFill: false,
+              multiple: true,
+              multipleSeparator: ', '});
+
+      });
+   }
 });
 
 function _preview_comment_on_change() {
