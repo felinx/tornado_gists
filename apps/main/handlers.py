@@ -39,6 +39,8 @@ from utils.send_mail import send_email
 from utils.decorators import login_required
 import settings
 
+DEFAULT_USER_AGENT = "Python/tornado_gists"
+
 
 class BaseHandler(tornado.web.RequestHandler):
 
@@ -306,7 +308,7 @@ class GithubMixin(tornado.auth.OAuth2Mixin):
             fields.update(extra_fields)
 
         url = self._oauth_request_token_url(**args)
-        http.fetch(url,
+        http.fetch(httpclient.HTTPRequest(url, user_agent=DEFAULT_USER_AGENT),
           self.async_callback(self._on_access_token, redirect_uri, client_id,
                               client_secret, callback, fields))
 
@@ -352,10 +354,12 @@ class GithubMixin(tornado.auth.OAuth2Mixin):
         callback = self.async_callback(self._on_github_request, callback)
         http = httpclient.AsyncHTTPClient()
         if post_args is not None:
-            http.fetch(url, method="POST", body=urllib.urlencode(post_args),
+            http.fetch(httpclient.HTTPRequest(url, user_agent=DEFAULT_USER_AGENT),
+                       method="POST", body=urllib.urlencode(post_args),
                        callback=callback)
         else:
-            http.fetch(url, callback=callback)
+            http.fetch(httpclient.HTTPRequest(url, user_agent=DEFAULT_USER_AGENT), 
+                       callback=callback)
 
     def _on_github_request(self, callback, response):
         if response.error:
