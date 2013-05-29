@@ -4,10 +4,13 @@ import anyjson
 from pprint import pprint
 import datetime
 import tornado.web
+from tornado import httpclient
 from utils.routes import route, route_redirect
 from utils.timesince import smartertimesince
 from utils import gravatar_html
 from apps.main.handlers import BaseHandler
+
+DEFAULT_USER_AGENT = "Python/tornado_gists"
 
 
 @route(r'/add/$', name="add_gist")
@@ -22,7 +25,8 @@ class AddGistHandler(BaseHandler):
             return self.redirect(self.reverse_url('view_gist', gist_id))
         http = tornado.httpclient.AsyncHTTPClient()
         url = "https://api.github.com/gists/%s" % gist_id
-        http.fetch(url, callback=lambda r:self.on_gist_found(gist_id, r))
+        http.fetch(httpclient.HTTPRequest(url, user_agent=DEFAULT_USER_AGENT),
+                   callback=lambda r:self.on_gist_found(gist_id, r))
 
     def on_gist_found(self, gist_id, response):
         gist_struct = anyjson.deserialize(response.body)
@@ -64,7 +68,8 @@ class AddGistHandler(BaseHandler):
             filename = files_iterator.next()
             http = tornado.httpclient.AsyncHTTPClient()
             url = "http://gist.github.com/raw/%s/%s" % (gist.gist_id, filename) # filename needs to be url quoted??
-            http.fetch(url, callback=lambda r:self.fetch_files(gist, files_iterator, r))
+            http.fetch(httpclient.HTTPRequest(url, user_agent=DEFAULT_USER_AGENT),
+                       callback=lambda r:self.fetch_files(gist, files_iterator, r))
 
         except StopIteration:
             self.redirect(self.reverse_url('view_gist', gist.gist_id))
